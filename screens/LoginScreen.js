@@ -71,7 +71,7 @@ const LoginScreen = ({ navigation }) => {
         //save the guest_session-id in the asyncstorage object
         AsyncStorage.setItem("guest_session_id", tokenResponse.data.guest_session_id);
         AsyncStorage.setItem("expirationTime", expirationTime.toString());
-        navigation.navigate("Main");
+        navigation.navigate("Home");
       }
     } catch (error) {
       // Handle authentication errors
