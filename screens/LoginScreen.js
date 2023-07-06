@@ -4,11 +4,14 @@ import {
   TouchableOpacity,
   TextInput,
   View,
+  Alert,
+  Linking,
   Button,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
+import { AntDesign } from "@expo/vector-icons";
 import { ACCESS_TOKEN } from "@env";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -16,41 +19,119 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 //      --url https://api.themoviedb.org/3/authentication \
 //      --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1OWI5YjNlYjRhY2I2MjI4OTdiZDQ4YzM1OWVmOWUzZSIsInN1YiI6IjYzZjM1MGJiNTI0OTc4MDBkYzQ0NTFmNSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.GopxSc92jiCxCJCf4XMPPIpPnORquU7nyTJ2phHUgsU' \
 //      --header 'accept: application/json'
-const url = "https://api.themoviedb.org/3/authentication/guest_session/new";
+const newSessionUrl = "https://api.themoviedb.org/3/authentication/session/new";
+
+const guestSessionUrl =
+  "https://api.themoviedb.org/3/authentication/guest_session/new";
+
+const newTokenUrl = " https://api.themoviedb.org/3/authentication/token/new";
 
 const LoginScreen = ({ navigation }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [RequestToken, setRequestToken] = useState("");
 
-  useEffect(() => {
-    const checkGuestSessionIdValidity = async () => {
-      const guest_session_id = await AsyncStorage.getItem("guest_session_id");
-      const expirationTime = await AsyncStorage.getItem("expirationTime");
-      console.log("guest_session_id", guest_session_id);
-      console.log("expirationTime", expirationTime);
+  useEffect(() => {}, []);
 
-      //check if the guest_session_id is valid
-      if (guest_session_id && expirationTime) {
-        const currentTime = Date.now();
-        if (currentTime < parseInt(expirationTime)) {
-          //the guest session has not expired
-          navigation.replace("Main");
-        } else {
-          //the guest session has expired
-          AsyncStorage.removeItem("guest_session_id");
-          AsyncStorage.removeItem("expirationTime");
-        }
+  const handleTmdbLogin = async () => {
+    requestNewToken();
+    createNewSession();
+  };
+
+  const checkGuestSessionIdValidity = async () => {
+    const guest_session_id = await AsyncStorage.getItem("guest_session_id");
+    const expirationTime = await AsyncStorage.getItem("expirationTime");
+    console.log("guest_session_id", guest_session_id);
+    console.log("expirationTime", expirationTime);
+
+    //check if the guest_session_id is valid
+    if (guest_session_id && expirationTime) {
+      const currentTime = Date.now();
+      if (currentTime < parseInt(expirationTime)) {
+        //the guest session has not expired
+        navigation.replace("Main");
+      } else {
+        //the guest session has expired
+        AsyncStorage.removeItem("guest_session_id");
+        AsyncStorage.removeItem("expirationTime");
       }
-    };
-    checkGuestSessionIdValidity();
-  }, []);
+    }
+  };
 
-  const handleLogin = async () => {
+  const checkUserSessionIdValidity = async () => {
+    const guest_session_id = await AsyncStorage.getItem("guest_session_id");
+    const expirationTime = await AsyncStorage.getItem("expirationTime");
+    console.log("guest_session_id", guest_session_id);
+    console.log("expirationTime", expirationTime);
+
+    //check if the guest_session_id is valid
+    if (guest_session_id && expirationTime) {
+      const currentTime = Date.now();
+      if (currentTime < parseInt(expirationTime)) {
+        //the guest session has not expired
+        navigation.replace("Main");
+      } else {
+        //the guest session has expired
+        AsyncStorage.removeItem("guest_session_id");
+        AsyncStorage.removeItem("expirationTime");
+      }
+    }
+  };
+
+  const requestNewToken = async () => {
     try {
       // Step 1: Get a request token
       const tokenResponse = await axios({
         method: "GET",
-        url: url,
+        url: newTokenUrl,
+        headers: {
+          Authorization: `Bearer ${ACCESS_TOKEN}`,
+        },
+      });
+
+      //const requestToken = tokenResponse.data.request_token;
+      setRequestToken(tokenResponse.data.request_token);
+      console.log("requestToken", RequestToken);
+      const authUrl = `https://www.themoviedb.org/authenticate/${RequestToken}`;
+      await Linking.openURL(authUrl); // Step 2: Redirect the user to the TMDB website for authentication
+
+      //.then((response) => {
+      //   //console.log(response);
+      // });
+      // The user will be redirected back to your app after successful authentication
+      // Handle the redirection in your app's deep link or navigation system
+    } catch (err) {
+      console.log(err.message);
+    }
+  };
+
+  const createNewSession = async () => {
+    try {
+      // Step 2: Create a session with the request token
+      const sessionResponse = await axios({
+        method: "POST",
+        url: newSessionUrl,
+        headers: {
+          Authorization: `Bearer ${ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        data: {
+          request_token: encodeURIComponent(RequestToken),
+        },
+      });
+      const sessionId = sessionResponse.data.session_id;
+      console.log("Session ID:", sessionId);
+    } catch (err) {
+      console.log("errrrr", err);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    try {
+      // Step 1: Get a request token
+      const tokenResponse = await axios({
+        method: "GET",
+        url: guestSessionUrl,
         headers: {
           Authorization: `Bearer ${ACCESS_TOKEN}`,
         },
@@ -69,9 +150,12 @@ const LoginScreen = ({ navigation }) => {
         console.log("first expt", expirationTime);
 
         //save the guest_session-id in the asyncstorage object
-        AsyncStorage.setItem("guest_session_id", tokenResponse.data.guest_session_id);
+        AsyncStorage.setItem(
+          "guest_session_id",
+          tokenResponse.data.guest_session_id
+        );
         AsyncStorage.setItem("expirationTime", expirationTime.toString());
-        navigation.navigate("Home");
+        navigation.navigate("Main");
       }
     } catch (error) {
       // Handle authentication errors
@@ -85,72 +169,92 @@ const LoginScreen = ({ navigation }) => {
         style={styles.LinearGradient}
         colors={["#49494b", "#01010b", "#01010b"]}
       >
-        <View style={{ height: 80 }} />
-
-        <Text style={{ color: "white", fontSize: 30 }}>
-          welcome to the movie app{" "}
+        <Text
+          style={{
+            color: "white",
+            fontSize: 30,
+            fontWeight: "bold",
+            textAlign: "center",
+          }}
+        >
+          welcome to the movie app. This is just a simple mobile app that will
+          show you the details about the currently trnding movies and tv
+          shows.more features will be added in upcoming versions. I hope it will
+          be fun using
         </Text>
-
-        <View style={{ alignContent: "center" }}>
-          <TextInput
-            style={styles.TextInput}
-            placeholder="Username"
-            value={username}
-            onChangeText={setUsername}
-          />
-          <TextInput
-            style={styles.TextInput}
-            placeholder="Password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-
+        <View style={{ height: 80 }} />
+        <View
+          style={{
+            flexDirection: "column",
+            justifyContent: "center",
+            alignContent: "center",
+          }}
+        >
           <View
             style={{
-              flexDirection: "row",
+              flexDirection: "column",
               justifyContent: "center",
-              alignItems: "space-between",
             }}
           >
             <TouchableOpacity
-              style={styles.loginButton}
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+
+                marginHorizontal: 5,
+              }}
               onPress={() => {
-                handleLogin();
+                Alert.alert("This feature will be working soon");
+                //handleTmdbLogin();
               }}
             >
-              <Text style={styles.loginText}>Login with IMDB</Text>
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  margin: 10,
+                }}
+              >
+                Login with IMDB
+              </Text>
+              <AntDesign
+                name="arrowright"
+                size={24}
+                color="white"
+                style={{ margin: 10, fontWeight: "bold" }}
+              />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.loginButton}>
-              <Text style={styles.loginText}>Login as a guest</Text>
+            <View style={{ height: 20 }} />
+            <TouchableOpacity
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+
+                marginHorizontal: 5,
+              }}
+              onPress={() => handleGuestLogin()}
+            >
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  margin: 10,
+                }}
+              >
+                Login as Guest
+              </Text>
+              <AntDesign
+                name="arrowright"
+                size={24}
+                color="white"
+                style={{ margin: 10, fontWeight: "bold" }}
+              />
             </TouchableOpacity>
           </View>
         </View>
         <View style={{ height: 40 }} />
-        <TouchableOpacity
-          style={{
-            marginTop: 10,
-            padding: 10,
-            backgroundColor: "#4b4b4e",
-            marginHorizontal: 10,
-            borderRadius: 20,
-          }}
-          onPress={() => navigation.navigate("Main")}
-        >
-          <Text style={styles.loginText}>continue wth google</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{
-            marginTop: 10,
-            padding: 10,
-            backgroundColor: "#4b4b4e",
-            marginHorizontal: 10,
-            borderRadius: 20,
-          }}
-          onPress={() => navigation.navigate("Main")}
-        >
-          <Text style={styles.loginText}>continue wth facebook</Text>
-        </TouchableOpacity>
       </LinearGradient>
     </>
   );
@@ -173,9 +277,12 @@ const styles = StyleSheet.create({
   loginText: {
     color: "white",
     fontSize: 20,
+    fontWeight: "bold",
+    margin: 10,
   },
   loginButton: {
     marginTop: 10,
+    flexDirection: "row",
     padding: 10,
     backgroundColor: "#4b4b4e",
     marginHorizontal: 10,

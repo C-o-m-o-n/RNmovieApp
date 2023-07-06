@@ -12,8 +12,7 @@ import {
   Image,
 } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
-import { AntDesign } from "@expo/vector-icons";
-import { Entypo, Ionicons } from "@expo/vector-icons";
+import {AntDesign, Entypo, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
 import { ACCESS_TOKEN } from "@env";
