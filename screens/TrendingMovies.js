@@ -10,6 +10,7 @@ import {
   View,
   Dimensions,
   Image,
+	SafeAreaView
 } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 import {AntDesign, Entypo, Ionicons } from "@expo/vector-icons";
@@ -94,7 +95,7 @@ const TrendingMovies = ({ navigation }) => {
 
   const MovieModal = () => {
     return (
-      <>
+      <SafeAreaView>
         {CurrentMovie && (
           <Modal
             animationType="slide"
@@ -209,7 +210,7 @@ const TrendingMovies = ({ navigation }) => {
             </LinearGradient>
           </Modal>
         )}
-      </>
+     </SafeAreaView>
     );
   };
 

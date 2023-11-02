@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, SafeAreaView} from "react-native";
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
@@ -69,6 +69,7 @@ const BottomTabs = () => {
 
 export default function StackNavigation() {
   return (
+	 
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen
@@ -108,6 +109,7 @@ export default function StackNavigation() {
         />
       </Stack.Navigator>
     </NavigationContainer>
+
   );
 }
 
