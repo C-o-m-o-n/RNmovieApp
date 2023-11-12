@@ -6,8 +6,8 @@ import { AntDesign } from "@expo/vector-icons";
 const ProfileScreen = ({navigation}) => {
   return (
     <LinearGradient
-      style={{ flex: 1, backgroundColor: "#49494b", height: "100%" }}
-      colors={["#49494b", "#01010b", "#01010b"]}
+      style={{ flex: 1 }}
+      colors={["#49494b", "#0C2340"]}
     >
       <View style={{ height: 20 }} />
       <View

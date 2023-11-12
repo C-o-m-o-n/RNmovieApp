@@ -28,6 +28,7 @@ const TvShows = ({ navigation }) => {
   const [TrendingMovie, setTrendingMovie] = useState();
   const [ModalVisible, setModalVisible] = useState(false);
   const [CurrentMovie, setCurrentMovie] = useState();
+  const [CurrentTvCredits, setCurrentTvCredits] = useState();
 
   useEffect(() => {
     getTrendingTv();
@@ -51,6 +52,61 @@ const TvShows = ({ navigation }) => {
     }
   };
 
+  const getTvCredits = async ( CurrentTvId ) => {
+    //let's get the credits for the movie
+  const credits_url = `https://api.themoviedb.org/3/tv/${CurrentTvId}/credits?language=en-US`;
+    try {
+      // Step 1: Get a request token
+      const response = await axios({
+        method: "GET",
+        url: credits_url,
+        headers: {
+          Authorization: `Bearer ${ACCESS_TOKEN}`,
+        },
+      });
+
+      setCurrentTvCredits(response.data.cast);
+      // console.log("currentMovieCredits", CurrentTvCredits);
+
+    } catch (error) {
+      // Handle authentication errors
+      console.log("there is an error:", error);
+    }
+  }
+
+  const renderCurrentTvCredits = ({ item }) => {
+    return (
+      <View style={{
+        justifyContent: "center",
+      textAlign: "center",
+      alignSelf: "center",
+      marginTop: 20,
+      marginHorizontal: 10,
+      alignItems:"center"
+      }}>
+        <Image
+
+          source={{
+            uri: `https://image.tmdb.org/t/p/w600_and_h900_bestv2/${item.profile_path}`,
+          }}
+          style={{ height: 70, width: 70, borderRadius: 50, borderColor:"white", borderWidth:4,opacity:1                                                     }}
+        />
+
+        <Text
+          style={{
+            color: "white",
+            fontWeight: "bold",
+            fontSize: 20,
+          }}
+        >
+          {item.name}
+        </Text>
+      </View>
+    );
+  };
+
+
+
   const renderTrendingMovies = ({ item }) => {
     //https://image.tmdb.org/t/p/w600_and_h900_bestv2//mmSSn8Yn3GbJv9MsSnD4J1LnN9l.jpg
     return (
@@ -59,6 +115,7 @@ const TvShows = ({ navigation }) => {
           onPress={() => {
             setCurrentMovie(item);
             setModalVisible(!ModalVisible);
+            getTvCredits(item.id);
           }}
           style={{
             marginTop: 20,
@@ -216,6 +273,28 @@ const TvShows = ({ navigation }) => {
                     >
                       Votes: {CurrentMovie.vote_count}
                     </Text>
+
+                    <Text
+                      style={{
+                        color: "white",
+                        fontSize: 20,
+                        fontWeight: "bold",
+                        justifyContent: "center",
+                        textAlign: "center",
+                        alignSelf: "center",
+                        marginTop: 20,
+                      }}
+                    >
+                      Cast
+                    </Text>
+
+                    {/* current movie cast */}
+                    
+                    <FlatList
+                    horizontal
+                    data={CurrentTvCredits}
+                    renderItem={renderCurrentTvCredits}
+                    />
                   </ScrollView>
                 </View>
               </View>
